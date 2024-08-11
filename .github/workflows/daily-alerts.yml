@@ -39,7 +39,7 @@ jobs:
 
       - name: Post to Twitter
         run: |
-          python postTweet.py
+          python tweet.py
 
         env:
           TWITTER_CLIENT_ID: ${{ secrets.TWITTER_CLIENT_ID }}

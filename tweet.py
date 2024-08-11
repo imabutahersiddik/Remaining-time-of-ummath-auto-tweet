@@ -25,7 +25,7 @@ def calculate_remaining_time():
 # Post the tweet
 def post_tweet():
     remaining_years, remaining_days = calculate_remaining_time()
-    tweet_message = f"🚨 Another day passed! There are {remaining_years} years and {remaining_days} days remaining until the end of Ummath 2080. #Ummath #Countdown #MuslimCommunity #Faith"
+    tweet_message = f"Another day passed! There are {remaining_years} years and {remaining_days} days remaining until the end of Ummath 2080. #Ummath #Countdown #MuslimCommunity #Faith"
     api.update_status(tweet_message)
     print("Tweet posted successfully!")
 

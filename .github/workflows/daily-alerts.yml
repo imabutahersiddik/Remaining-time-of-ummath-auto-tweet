@@ -13,17 +13,20 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'  # Specify the Node.js version
+          node-version: '18'  # Specify the Node.js version
 
       - name: Install Dependencies
         run: |
           npm install twitter-lite
+    
+      - name: List files
+        run: ls -la
 
       - name: Calculate Remaining Days and Years
         id: calculate_days
         run: |
           # Current date
-          current_date="2024-09-04"
+          current_date=$(date +%Y-%m-%d)
           # End date for Ummath 2080
           end_date="2080-09-04"
 

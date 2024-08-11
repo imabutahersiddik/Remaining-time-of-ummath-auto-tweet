@@ -1,0 +1,39 @@
+name: Post Remaining Days of Ummath
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # This will run every day at 09:00 UTC
+
+jobs:
+  post-ummath:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Calculate Remaining Days and Years
+        id: calculate_days
+        run: |
+          # Current date
+          current_date="2024-08-11"
+          # End date for Ummath 2080
+          end_date="2080-09-04"
+
+          # Convert dates to seconds since epoch
+          current_seconds=$(date -d "$current_date" +%s)
+          end_seconds=$(date -d "$end_date" +%s)
+
+          # Calculate the difference in days
+          remaining_days=$(( (end_seconds - current_seconds) / 86400 ))
+
+          # Calculate remaining years and days
+          remaining_years=$(( remaining_days / 365 ))
+          remaining_days=$(( remaining_days % 365 ))
+
+          echo "remaining_years=$remaining_years" >> $GITHUB_ENV
+          echo "remaining_days=$remaining_days" >> $GITHUB_ENV
+
+      - name: Post to Twitter
+        uses: twitter/tweet@v1.0.0
+        with:
+          api_key: ${{ secrets.TWITTER_API_KEY }}
+          api_secret_key: ${{ secrets.TWITTER_API_SECRET_KEY }}
+          tweet: "🚨 Another day passed! There are ${{ env.remaining_years }} years and ${{ env.remaining_days }} days remaining until the end of Ummath 2080. #Ummath #Countdown #MuslimCommunity #Faith"

@@ -39,7 +39,7 @@ jobs:
 
       - name: Post to Twitter
         run: |
-          python /home/runner/work/Remaining-time-of-ummath-auto-tweet/.github/workflows/tweet.py
+          python home/runner/work/Remaining-time-of-ummath-auto-tweet/.github/workflows/tweet.py
 
         env:
           TWITTER_CLIENT_ID: ${{ secrets.TWITTER_CLIENT_ID }}

@@ -1,29 +1,39 @@
 import tweepy
-import requests_oauthlib
 import os
 
-def get_bearer_token(consumer_key, consumer_secret):
-    """Obtains a bearer token using the Client Credentials Grant flow."""
-    url = "https://api.twitter.com/oauth2/token"
-    data = {"grant_type": "client_credentials"}
-    auth = requests_oauthlib.OAuth1Session(consumer_key, consumer_secret)
-    response = auth.post(url, data=data)
-    response.raise_for_status() 
-    return response.json()["access_token"]
+def post_tweet(api_key, api_secret, access_token, access_token_secret, message):
+    """Posts a tweet using the provided Twitter API credentials.
 
-def post_tweet(tweet_text, bearer_token):
-    """Posts a tweet using the provided bearer token."""
-    client = tweepy.Client(bearer_token=bearer_token)
-    client.create_tweet(text=tweet_text)
+    Args:
+        api_key (str): Your Twitter API key.
+        api_secret (str): Your Twitter API secret key.
+        access_token (str): Your Twitter access token.
+        access_token_secret (str): Your Twitter access token secret.
+        message (str): The tweet message to post.
+    """
+
+    # Authenticate with the Twitter API
+    auth = tweepy.OAuthHandler(api_key, api_secret)
+    auth.set_access_token(access_token, access_token_secret)
+    api = tweepy.API(auth)
+
+    try:
+        # Post the tweet
+        api.update_status(message)
+        print("Tweet posted successfully!")
+    except tweepy.TweepError as error:
+        print(f"Error posting tweet: {error}")
+
 
 if __name__ == "__main__":
-    consumer_key = os.environ["TWITTER_CLIENT_ID"]
-    consumer_secret = os.environ["TWITTER_CLIENT_SECRET"]
-    remaining_years = os.environ["remaining_years"]
-    remaining_days = os.environ["remaining_days"]
+    # Get Twitter API credentials from environment variables
+    api_key = os.environ['TWITTER_API_KEY']
+    api_secret = os.environ['TWITTER_API_SECRET_KEY']
+    access_token = os.environ['TWITTER_ACCESS_TOKEN']
+    access_token_secret = os.environ['TWITTER_ACCESS_TOKEN_SECRET']
 
-    tweet_message = f"🚨 Another day passed! There are {remaining_years} years and {remaining_days} days remaining until the end of Ummath 2080. #Ummath #Countdown #MuslimCommunity #Faith"
+    # Example tweet message
+    tweet_message = "This is a test tweet from Tweepy!"
 
-    bearer_token = get_bearer_token(consumer_key, consumer_secret)
-    post_tweet(tweet_message, bearer_token)
-    print("Tweet posted successfully!")
+    # Post the tweet
+    post_tweet(api_key, api_secret, access_token, access_token_secret, tweet_message)

@@ -1,42 +1,29 @@
 import tweepy
+import requests_oauthlib
 import os
-from requests_oauthlib import OAuth2Session
-from oauthlib.oauth2 import BackendApplicationClient
 
-# Your Twitter App settings (replace with your actual values)
-CLIENT_ID = os.environ['TWITTER_CLIENT_ID']
-CLIENT_SECRET = os.environ['TWITTER_CLIENT_SECRET']
+def get_bearer_token(consumer_key, consumer_secret):
+    """Obtains a bearer token using the Client Credentials Grant flow."""
+    url = "https://api.twitter.com/oauth2/token"
+    data = {"grant_type": "client_credentials"}
+    auth = requests_oauthlib.OAuth1Session(consumer_key, consumer_secret)
+    response = auth.post(url, data=data)
+    response.raise_for_status() 
+    return response.json()["access_token"]
 
-def get_bearer_token():
-    """Fetches a bearer token using your app credentials."""
-    client = BackendApplicationClient(client_id=CLIENT_ID)
-    oauth = OAuth2Session(client=client)
-    token = oauth.fetch_token(
-        token_url='https://api.twitter.com/oauth2/token',
-        client_id=CLIENT_ID,
-        client_secret=CLIENT_SECRET
-    )
-    return token['access_token']
-
-def post_tweet(tweet_text):
-    """Posts a tweet using the provided text and bearer token."""
-    bearer_token = get_bearer_token()
-    headers = {
-        "Authorization": f"Bearer {bearer_token}",
-        "Content-Type": "application/json"
-    }
-    data = {"text": tweet_text}
-    response = requests.post(
-        "https://api.twitter.com/2/tweets",
-        headers=headers,
-        json=data
-    )
-    if response.status_code != 201:
-        raise Exception(f"Request returned an error: {response.status_code} {response.text}")
-    print("Tweet posted successfully!")
+def post_tweet(tweet_text, bearer_token):
+    """Posts a tweet using the provided bearer token."""
+    client = tweepy.Client(bearer_token=bearer_token)
+    client.create_tweet(text=tweet_text)
 
 if __name__ == "__main__":
-    # ... (Your existing code to calculate remaining days)
+    consumer_key = os.environ["TWITTER_CLIENT_ID"]
+    consumer_secret = os.environ["TWITTER_CLIENT_SECRET"]
+    remaining_years = os.environ["remaining_years"]
+    remaining_days = os.environ["remaining_days"]
 
     tweet_message = f"🚨 Another day passed! There are {remaining_years} years and {remaining_days} days remaining until the end of Ummath 2080. #Ummath #Countdown #MuslimCommunity #Faith"
-    post_tweet(tweet_message)
+
+    bearer_token = get_bearer_token(consumer_key, consumer_secret)
+    post_tweet(tweet_message, bearer_token)
+    print("Tweet posted successfully!")

@@ -37,11 +37,9 @@ jobs:
           echo "remaining_years=$remaining_years" >> $GITHUB_ENV
           echo "remaining_days=$remaining_days" >> $GITHUB_ENV
 
-       - name: Post to Twitter
-          working-directory: .github/workflows/ 
-          run: |
-          python tweet.py 
-
+      - name: Post to Twitter
+        run: |
+          python .github/workflows/postTweet.py
 
         env:
           TWITTER_CLIENT_ID: ${{ secrets.TWITTER_CLIENT_ID }}

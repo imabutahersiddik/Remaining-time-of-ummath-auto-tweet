@@ -1,46 +1,73 @@
-name: Post Remaining Days of Ummath
+name: Post Remaining Days of Ummath (Tweepy)
 
 on:
   schedule:
-    - cron: '0 9 * * *' 
-  workflow_dispatch:  
+    - cron: '0 9 * * *'  # Run daily at 09:00 UTC
+  workflow_dispatch:  # Allow manual triggering
 
 jobs:
   post-ummath:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.9' 
+          python-version: '3.9'  # Or your preferred version
 
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install tweepy requests_oauthlib
+      - name: Install dependencies
+        run: pip install tweepy
 
       - name: Calculate Remaining Days and Years
         id: calculate_days
         run: |
+          # Current date
           current_date=$(date +%Y-%m-%d)
+          # End date for Ummath 2080
           end_date="2080-09-04"
 
-          current_seconds=$(date -d "$current_date" +%s)
-          end_seconds=$(date -d "$end_date" +%s)
+          # Calculate remaining days using Python
+          python << EOF
+          import datetime
 
-          remaining_days=$(( (end_seconds - current_seconds) / 86400 ))
+          current_date = datetime.datetime.strptime("$current_date", "%Y-%m-%d").date()
+          end_date = datetime.datetime.strptime("$end_date", "%Y-%m-%d").date()
+          remaining_days = (end_date - current_date).days
 
-          remaining_years=$(( remaining_days / 365 ))
-          remaining_days=$(( remaining_days % 365 ))
-
-          echo "remaining_years=$remaining_years" >> $GITHUB_ENV
-          echo "remaining_days=$remaining_days" >> $GITHUB_ENV
+          print(f"::set-output name=remaining_days::{remaining_days}")
+          EOF
 
       - name: Post to Twitter
         run: |
-          python home/runner/work/Remaining-time-of-ummath-auto-tweet/.github/workflows/tweet.py
+          python - << EOF
+          import tweepy
+          import os
 
+          def post_tweet(api_key, api_secret, access_token, access_token_secret, message):
+              auth = tweepy.OAuthHandler(api_key, api_secret)
+              auth.set_access_token(access_token, access_token_secret)
+              api = tweepy.API(auth)
+              try:
+                  api.update_status(message)
+                  print("Tweet posted successfully!")
+              except tweepy.TweepError as error:
+                  print(f"Error posting tweet: {error}")
+
+          api_key = os.environ['TWITTER_API_KEY']
+          api_secret = os.environ['TWITTER_API_SECRET_KEY']
+          access_token = os.environ['TWITTER_ACCESS_TOKEN']
+          access_token_secret = os.environ['TWITTER_ACCESS_TOKEN_SECRET']
+
+          remaining_days = ${{ steps.calculate_days.outputs.remaining_days }}
+          tweet_message = f"🚨 Another day passed! There are {remaining_days} days remaining until the end of Ummath 2080. #Ummath #Countdown #MuslimCommunity #Faith"
+
+          post_tweet(api_key, api_secret, access_token, access_token_secret, tweet_message)
+          EOF
         env:
-          TWITTER_CLIENT_ID: ${{ secrets.TWITTER_CLIENT_ID }}
-          TWITTER_CLIENT_SECRET: ${{ secrets.TWITTER_CLIENT_SECRET }}
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET_KEY: ${{ secrets.TWITTER_API_SECRET_KEY }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
